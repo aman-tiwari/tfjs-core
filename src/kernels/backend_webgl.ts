@@ -63,6 +63,8 @@ import {ResizeBilinearProgram} from './webgl/resize_bilinear_gpu';
 // tslint:disable-next-line:max-line-length
 import {ResizeNearestNeighborProgram} from './webgl/resize_nearest_neighbor_gpu';
 import {ReverseProgram} from './webgl/reverse_gpu';
+// tslint:disable-next-line:max-line-length
+import {ScanContractProgram, ScanMergeProgram, ScanSequentialProgram} from './webgl/scan_gpu';
 import {SliceProgram} from './webgl/slice_gpu';
 import {StridedSliceProgram} from './webgl/strided_slice_gpu';
 import {TextureData, TextureType} from './webgl/tex_util';
@@ -432,6 +434,23 @@ export class MathBackendWebGL implements KernelBackend {
   gather<T extends Tensor>(x: T, indices: Tensor1D, axis: number): T {
     const program = new GatherProgram(x.shape, indices.size, axis);
     return this.compileAndRun(program, [x, indices]);
+  }
+
+  scan<T extends Tensor>(x: T, opBody: string, identity: number): T {
+    const op = `float op(float x, float y) { return ${opBody}; }`;
+    const axis = x.shape.length - 1;
+
+    if (x.shape[axis] < 4) {
+      const sequentialScan =
+          new ScanSequentialProgram(x.shape, axis, 'op', op, identity);
+      return this.compileAndRun(sequentialScan, [x]);
+    }
+
+    const contract = new ScanContractProgram(x.shape, axis, 'op', op);
+    const contracted = this.compileAndRun(contract, [x]);
+    const upsweep = this.scan(contracted, opBody, identity);
+    const merge = new ScanMergeProgram(x.shape, upsweep.shape, axis, 'op', op);
+    return this.compileAndRun(merge, [x, upsweep]);
   }
 
   private reduce(x: Tensor2D, reduceType: 'max'|'min'|'sum', dtype: DataType):

@@ -21,7 +21,9 @@ import {DataId, Tensor, Tensor1D, Tensor2D, Tensor3D, Tensor4D} from '../tensor'
 import {DataType, Rank, ShapeMap, TypedArray} from '../types';
 
 // Required information for all backends.
-export interface BackendTimingInfo { kernelMs: number; }
+export interface BackendTimingInfo {
+  kernelMs: number;
+}
 
 export interface TensorStorage {
   read(dataId: DataId): Promise<TypedArray>;
@@ -213,8 +215,9 @@ export interface KernelBackend extends TensorStorage, BackendTimer {
   oneHot(indices: Tensor1D, depth: number, onValue: number, offValue: number):
       Tensor2D;
 
-  cumsum(x: Tensor, axis: number, exclusive: boolean, reverse: boolean):
-      Tensor;
+  cumsum(x: Tensor, axis: number, exclusive: boolean, reverse: boolean): Tensor;
+
+  scan(x: Tensor, opBody: string, identity?: number): Tensor;
 
   dispose(): void;
 }

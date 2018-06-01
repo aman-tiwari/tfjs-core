@@ -33,6 +33,7 @@ import {NormOps} from './norm';
 import {PoolOps} from './pool';
 import {ReductionOps} from './reduction_ops';
 import {ReverseOps} from './reverse';
+import {ScanOps} from './scan';
 import {SliceOps} from './slice';
 import {SoftmaxOps} from './softmax';
 import {StridedSliceOps} from './strided_slice';
@@ -223,6 +224,8 @@ export const softmax = SoftmaxOps.softmax;
 export const localResponseNormalization = LRNOps.localResponseNormalization;
 
 export const linalg = LinalgOps;
+
+export const scan = ScanOps.scan;
 
 export {operation} from './operation';
 

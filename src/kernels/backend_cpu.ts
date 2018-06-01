@@ -401,6 +401,27 @@ export class MathBackendCPU implements KernelBackend {
     return result;
   }
 
+  scan<T extends Tensor>(x: T, opBody: string, identity = 0): T {
+    if (x.shape.length !== 1) {
+      throw new Error('scan on CPU only supports 1d tensors for now');
+    }
+
+    const opFn = new Function('x', 'y', `return ${opBody}`);
+    const result = ops.buffer(x.shape, x.dtype);
+    const scanAxis = x.shape.length - 1;  // for now
+    let acc = identity;
+    const indexer = x.shape.slice(0);
+    indexer[scanAxis] = 0;
+
+    for (let i = 0; i < x.shape[scanAxis]; i++) {
+      indexer[scanAxis] = i;
+      result.set(acc, ...indexer);
+      acc = opFn(acc, x.get(...indexer));
+    }
+
+    return result.toTensor() as T;
+  }
+
   equal(a: Tensor, b: Tensor): Tensor {
     return this.broadcastedBinaryOp(a, b, 'bool', (aVal, bVal) => {
       return (aVal === bVal) ? 1 : 0;
