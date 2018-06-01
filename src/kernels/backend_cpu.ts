@@ -401,7 +401,8 @@ export class MathBackendCPU implements KernelBackend {
     return result;
   }
 
-  scan<T extends Tensor>(x: T, opBody: string, identity = 0): T {
+  scan<T extends Tensor>(x: T, opBody: string, identity = 0, exclusive = true):
+      T {
     if (x.shape.length !== 1) {
       throw new Error('scan on CPU only supports 1d tensors for now');
     }
@@ -411,9 +412,9 @@ export class MathBackendCPU implements KernelBackend {
     const scanAxis = x.shape.length - 1;  // for now
     let acc = identity;
     const indexer = x.shape.slice(0);
-    indexer[scanAxis] = 0;
+    indexer[scanAxis] = exclusive ? 0 : x.get(...indexer);
 
-    for (let i = 0; i < x.shape[scanAxis]; i++) {
+    for (let i = exclusive ? 0 : 1; i < x.shape[scanAxis]; i++) {
       indexer[scanAxis] = i;
       result.set(acc, ...indexer);
       acc = opFn(acc, x.get(...indexer));

@@ -217,7 +217,8 @@ export interface KernelBackend extends TensorStorage, BackendTimer {
 
   cumsum(x: Tensor, axis: number, exclusive: boolean, reverse: boolean): Tensor;
 
-  scan(x: Tensor, opBody: string, identity?: number): Tensor;
+  scan(x: Tensor, opBody: string, identity?: number, exclusive?: boolean):
+      Tensor;
 
   dispose(): void;
 }

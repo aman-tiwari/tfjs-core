@@ -25,11 +25,11 @@ export class ScanSequentialProgram implements GPGPUProgram {
 
   constructor(
       shape: number[], axis: number, binOpName: string, binOpDef: string,
-      identity: number) {
+      identity: number, exclusive = true) {
     this.outputShape = shape.slice();
     const rank = shape.length;
     const finalDim = shape[shape.length - 1];
-
+    const compare = exclusive ? '>=' : '>';
     this.userCode = `
       ${binOpDef}
 
@@ -38,7 +38,7 @@ export class ScanSequentialProgram implements GPGPUProgram {
         int end = ${getScanAxisCoord(rank, axis, 'coords')};
         float val = float(${identity});
         for (int idx = ${finalDim} - 1; idx >= 0; idx -= 1) {
-          if (idx >= end) {
+          if (idx ${compare} end) {
             continue;
           }
           ${getScanAxisCoord(rank, axis, 'coords')} = idx;

@@ -22,10 +22,11 @@ import {operation} from './operation';
 
 export class ScanOps {
   @operation
-  static scan<T extends Tensor>(x: T, opBody: string, identity = 0): T {
+  static scan<T extends Tensor>(
+      x: T, opBody: string, identity = 0, exclusive = true): T {
     util.assertArgumentsAreTensors({x}, 'scan');
     const ret = ENV.engine.runKernel(
-        backend => backend.scan(x, opBody, identity), {'x': x});
+        backend => backend.scan(x, opBody, identity, exclusive), {'x': x});
     return ret as T;
   }
 }

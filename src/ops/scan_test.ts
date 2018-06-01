@@ -36,6 +36,14 @@ describeWithFlags('scan scan1d', ALL_ENVS, () => {
     expectArraysClose(result, canonicalResult);
   });
 
+  it('comparison with tf.cumsum 1d', () => {
+    const input = tf.linspace(1, 8, 8);
+    const result = tf.scan(input, 'x + y', 0, false);
+    const canonicalResult = tf.cumsum(input, 0, false);
+    expect(result.shape).toEqual(input.shape);
+    expectArraysClose(result, canonicalResult);
+  });
+
   it('cummul over 1d array', () => {
     const input = tf.tensor1d([1, 2, 3, 4, 5, 6, 7, 8]);
     const result = tf.scan(input, 'x * y', 1.0);
