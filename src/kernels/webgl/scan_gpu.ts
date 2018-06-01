@@ -25,20 +25,20 @@ export class ScanSequentialProgram implements GPGPUProgram {
 
   constructor(
       shape: number[], axis: number, binOpName: string, binOpDef: string,
-      identity: number, exclusive = true) {
+      identity: number, exclusive: boolean) {
     this.outputShape = shape.slice();
     const rank = shape.length;
     const finalDim = shape[shape.length - 1];
-    const compare = exclusive ? '>=' : '>';
+    const init = identity.toString();
     this.userCode = `
       ${binOpDef}
 
       void main() {
         ${getCoordsDataType(rank)} coords = getOutputCoords();
         int end = ${getScanAxisCoord(rank, axis, 'coords')};
-        float val = float(${identity});
+        float val = float(${init});
         for (int idx = ${finalDim} - 1; idx >= 0; idx -= 1) {
-          if (idx ${compare} end) {
+          if (idx >= end) {
             continue;
           }
           ${getScanAxisCoord(rank, axis, 'coords')} = idx;

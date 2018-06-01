@@ -436,19 +436,20 @@ export class MathBackendWebGL implements KernelBackend {
     return this.compileAndRun(program, [x, indices]);
   }
 
-  scan<T extends Tensor>(x: T, opBody: string, identity: number): T {
+  scan<T extends Tensor>(
+      x: T, opBody: string, identity: number, exclusive = true): T {
     const op = `float op(float x, float y) { return ${opBody}; }`;
     const axis = x.shape.length - 1;
 
     if (x.shape[axis] < 4) {
-      const sequentialScan =
-          new ScanSequentialProgram(x.shape, axis, 'op', op, identity);
+      const sequentialScan = new ScanSequentialProgram(
+          x.shape, axis, 'op', op, identity, exclusive);
       return this.compileAndRun(sequentialScan, [x]);
     }
 
     const contract = new ScanContractProgram(x.shape, axis, 'op', op);
     const contracted = this.compileAndRun(contract, [x]);
-    const upsweep = this.scan(contracted, opBody, identity);
+    const upsweep = this.scan(contracted, opBody, identity, exclusive);
     const merge = new ScanMergeProgram(x.shape, upsweep.shape, axis, 'op', op);
     return this.compileAndRun(merge, [x, upsweep]);
   }

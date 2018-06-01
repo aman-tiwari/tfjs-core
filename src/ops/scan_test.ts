@@ -36,10 +36,21 @@ describeWithFlags('scan scan1d', ALL_ENVS, () => {
     expectArraysClose(result, canonicalResult);
   });
 
-  it('comparison with tf.cumsum 1d', () => {
+  it('comparison with tf.cumsum 1d non-power of two', () => {
+    const input = tf.linspace(1, 8, 17);
+    const result = tf.scan(input, 'x + y');
+    const canonicalResult = tf.cumsum(input, 0, true);
+    expect(result.shape).toEqual(input.shape);
+    expectArraysClose(result, canonicalResult);
+  });
+
+  it('comparison with tf.cumsum 1d inclusive', () => {
     const input = tf.linspace(1, 8, 8);
     const result = tf.scan(input, 'x + y', 0, false);
     const canonicalResult = tf.cumsum(input, 0, false);
+    console.log(
+        tf.cumsum(input, 0, false).dataSync().toString(),
+        tf.cumsum(input, 0, true).dataSync().toString());
     expect(result.shape).toEqual(input.shape);
     expectArraysClose(result, canonicalResult);
   });
@@ -75,11 +86,11 @@ describeWithFlags('scan scan2d', WEBGL_ENVS, () => {
 describeWithFlags('scan scan2d', WEBGL_ENVS, () => {
   it('cumsum over 2d array', () => {
     const input =
-        tf.tensor2d([[1, 2, 3, 4, 5, 6, 7, 8], [101, 2, 3, 4, 5, 6, 7, 8]]);
+        tf.tensor2d([[1, 2, 3, 4, 5, 6, 7, 8], [101, 2, 3, 4, -5, 6, 7, 8]]);
     const result = tf.scan(input, 'x + y');
     expect(result.shape).toEqual(input.shape);
     expectArraysClose(result, tf.tensor2d([
-      [0, 1, 3, 6, 10, 15, 21, 28], [0, 101, 103, 106, 110, 115, 121, 128]
+      [0, 1, 3, 6, 10, 15, 21, 28], [0, 101, 103, 106, 110, 105, 111, 118]
     ]));
   });
 
@@ -93,12 +104,11 @@ describeWithFlags('scan scan2d', WEBGL_ENVS, () => {
 
   it('cummul over 2d array', () => {
     const input =
-        tf.tensor2d([[1, 2, 3, 4, 5, 6, 7, 8], [-1, 2, 3, 4, 5, 6, 7, 8]]);
+        tf.tensor2d([[1, 2, 3, 4, 5, 6, 7, 8], [-1, 2, 3, 4, -5, 6, 7, 8]]);
     const result = tf.scan(input, 'x * y', 1.0);
     expect(result.shape).toEqual(input.shape);
     expectArraysClose(result, tf.tensor2d([
-      [1, 1, 2, 6, 24, 120, 720, 5040],
-      [1, -1, -2, -6, -24, -120, -720, -5040]
+      [1, 1, 2, 6, 24, 120, 720, 5040], [1, -1, -2, -6, -24, 120, 720, 5040]
     ]));
   });
 });

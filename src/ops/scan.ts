@@ -18,6 +18,7 @@
 import {ENV} from '../environment';
 import {Tensor} from '../tensor';
 import * as util from '../util';
+
 import {operation} from './operation';
 
 export class ScanOps {
@@ -25,6 +26,13 @@ export class ScanOps {
   static scan<T extends Tensor>(
       x: T, opBody: string, identity = 0, exclusive = true): T {
     util.assertArgumentsAreTensors({x}, 'scan');
+    const scanAxis = x.shape.length - 1;  // for now only this supported
+    if (exclusive) {
+      const padShape =
+          x.shape.map((s, dim) => dim === scanAxis ? [0, 1] : [0, 0]);
+      padShape[scanAxis] = [];
+    }
+
     const ret = ENV.engine.runKernel(
         backend => backend.scan(x, opBody, identity, exclusive), {'x': x});
     return ret as T;
